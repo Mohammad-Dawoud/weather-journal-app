@@ -1,10 +1,17 @@
 const { randomBytes } = require("node:crypto");
 const cors = require("cors");
 const express = require("express");
+const { OpenWeatherError } = require("./weather-openweather");
 
 const SESSION_COOKIE = "weather_journal_session";
 const SESSION_CAPACITY = 32;
 const IDLE_MS = 30 * 60 * 1000;
+const liveErrorStatus = new Map([
+  ["weather_credentials", 502],
+  ["weather_rate_limited", 429],
+  ["weather_busy", 503],
+  ["weather_timeout", 504],
+]);
 
 function readSessionId(cookie) {
   const parts = (cookie ?? "").split(";").map((part) => part.trim());
@@ -165,7 +172,15 @@ function mountJournalRoutes(
       const entry = normalizeEntry(result.weather, input.feelings);
       session.projectData = entry;
       return res.json({ entry });
-    } catch {
+    } catch (error) {
+      if (
+        error instanceof OpenWeatherError &&
+        liveErrorStatus.has(error.code)
+      ) {
+        return res
+          .status(liveErrorStatus.get(error.code))
+          .json({ error: error.code });
+      }
       return res.status(502).json({ error: "weather_unavailable" });
     } finally {
       session.lastSeen = now();

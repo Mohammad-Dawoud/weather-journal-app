@@ -190,6 +190,10 @@ button:focus-visible {
   display: block;
 }
 
+.provider-logo {
+  vertical-align: middle;
+}
+
 #status:not(:empty) {
   margin: 0 0 10px;
 }

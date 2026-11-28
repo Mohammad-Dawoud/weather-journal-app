@@ -4,6 +4,10 @@ The Weather Journal App began in Udacity's Front End Web Developer Nanodegree. T
 
 Mohammad Dawoud confirmed authorship of the submitted CSS customizations. The form integration, status presentation, responsive and keyboard-focus corrections, server and test work are separate recovery changes. These notices cover the attributed material.
 
+## OpenWeather attribution
+
+Live mode shows the official OpenWeather logo and a link to the provider. `website/openweather-logo.png` is the unmodified RGB master PNG from the attribution asset bundle, with SHA-256 `78530eceb7385370ba7997ae66c08125e2d0cad102d172b2c5ae5e68c19e9a2b`. The asset is used for provider attribution. [OpenWeather attribution guidance](https://openweathermap.org/faq#license) · [Official logo files](https://openweathermap.org/payload/api/files/file/logo_files.zip)
+
 ## Locally served fonts
 
 The files below are unmodified. Each family has its own complete SIL Open Font License 1.1 notice and copyright in `website/fonts/`. CSS uses Overpass 400, Hind Siliguri 400 and Josefin Sans 700. The notice for Josefin Sans retains its Reserved Font Name. [Pinned Google Fonts source](https://github.com/google/fonts/tree/5026800714d07231937d92eb4cceabf06e05d74e)

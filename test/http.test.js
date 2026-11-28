@@ -1,9 +1,11 @@
 const assert = require("node:assert/strict");
 const { once } = require("node:events");
 const http = require("node:http");
+const https = require("node:https");
 const { test } = require("node:test");
 const { createApp } = require("../server");
 const { lookupFixture } = require("../weather-fixture");
+const { OpenWeatherError } = require("../weather-openweather");
 
 async function openApp(t, options = {}) {
   const server = http.createServer();
@@ -90,6 +92,8 @@ test("serves the restored UI and only the static asset directory", async (t) => 
   for (const path of [
     "/server.js",
     "/package.json",
+    "/.env.example",
+    "/.local/live.env",
     "/licenses/udacity-fend-MIT.txt",
     "/.local/original-ui-b1/capture-verification.json",
     "/ALL",
@@ -329,4 +333,73 @@ test("a new server starts empty and refuses a previous instance's session", asyn
   const second = await openApp(t);
   assert.equal((await second.post(cookie, sample)).status, 409);
   assert.deepEqual((await second.read(cookie)).data, { entry: null });
+});
+
+test("fixture mode stays offline even with a configured key path", async (t) => {
+  const spy = t.mock.method(https, "get", () => {
+    throw new Error("Unexpected weather network call");
+  });
+  const { request, read, post } = await openApp(t);
+  const page = await request("/");
+  assert.match(page.content, /data-weather-mode="fixture"/);
+  assert.doesNotMatch(page.content, /Weather data provided by OpenWeather/);
+  const cookie = cookieFrom(await read());
+  assert.deepEqual((await post(cookie, sample)).data, { entry: stored });
+  assert.equal(spy.mock.callCount(), 0);
+  assert.throws(() => createApp({ origin: "http://127.0.0.1:1", live: true }), {
+    message: "Live mode requires an OpenWeather lookup.",
+  });
+});
+
+test("live failures never fall back and preserve the last successful journal entry", async (t) => {
+  let error;
+  const { request, read, post } = await openApp(t, {
+    live: true,
+    async lookupWeather() {
+      if (error) throw new OpenWeatherError(error);
+      return {
+        temperatureF: 51.5,
+        observedAtSeconds: Date.UTC(2025, 0, 15, 0, 30) / 1000,
+      };
+    },
+  });
+  for (const url of ["/", "/index.html"]) {
+    const page = await request(url);
+    assert.match(page.content, /data-weather-mode="live"/);
+    assert.match(
+      page.content,
+      /href="https:\/\/openweathermap.org\/"[^>]*>Weather data provided by OpenWeather/,
+    );
+    assert.match(page.content, /src="\/openweather-logo.png"/);
+    assert.doesNotMatch(page.content, /Fixture ZIPs include/);
+    assert.equal(page.headers["cache-control"], "no-store");
+  }
+  const logo = await request("/openweather-logo.png");
+  assert.equal(logo.status, 200);
+  assert.match(logo.headers["content-type"], /^image\/png/);
+
+  const cookie = cookieFrom(await read());
+  const liveEntry = { ...stored, temperatureF: 51.5 };
+  assert.deepEqual((await post(cookie, sample)).data, { entry: liveEntry });
+  for (const [code, status] of [
+    ["weather_credentials", 502],
+    ["weather_rate_limited", 429],
+    ["weather_busy", 503],
+    ["weather_timeout", 504],
+    ["weather_unavailable", 502],
+    ["https://example.invalid/?appid=synthetic", 502],
+  ]) {
+    error = code;
+    const rejected = await post(cookie, {
+      zip: "10001",
+      feelings: "Stay unchanged.",
+    });
+    assert.equal(rejected.status, status);
+    assert.deepEqual(rejected.data, {
+      error: code.startsWith("weather_") ? code : "weather_unavailable",
+    });
+    assert.doesNotMatch(rejected.content, /appid|synthetic/);
+    assert.equal(rejected.headers["cache-control"], "no-store");
+    assert.deepEqual((await read(cookie)).data, { entry: liveEntry });
+  }
 });

@@ -1,6 +1,6 @@
 # Weather Journal App
 
-A local weather journal recovered from my Udacity Front End Web Developer coursework. This JavaScript and Express demo saves one sample note and fixture weather per browser session. The published starting commit contains my client and route excerpts. The local recovery restores the submitted interface with responsive and keyboard-focus corrections, while retaining the recovered server, session controls and fixture tests. See the [source and font notices](NOTICE.md) for the HTML, CSS and locally served fonts.
+A local weather journal recovered from my Udacity Front End Web Developer coursework. This JavaScript and Express demo saves one sample note and its weather per browser session. The published starting commit contains my client and route excerpts. The local recovery restores the submitted interface with responsive and keyboard-focus corrections and supports offline fixtures and optional OpenWeather lookups. [Source and font notices](NOTICE.md)
 
 ## Run the local demo
 
@@ -26,6 +26,8 @@ Enter `02139` and a sample note, then choose **Generate** or use the keyboard. T
 
 ## Routes and verification
 
+Fixture mode is the default and runs without an API key or external weather calls.
+
 The page reads `GET /all` to establish its session. It sends a five-digit ZIP string and a nonempty note up to 500 characters to `POST /addWeatherData`, then waits for a successful response before rereading `GET /all`. JSON is limited to 4 KiB. The server binds only to `127.0.0.1`, accepts its exact local Host and write Origin, and supports up to 32 isolated sessions.
 
 ```powershell
@@ -37,4 +39,16 @@ npm run test:e2e
 
 The browser tests use Playwright 1.65.1 and Chromium headless shell 159.0.8154.6 (revision 1255). The browser is already present in the prepared SPPP workspace. The app serves plain static assets directly through Express.
 
-Fixture mode makes no external weather requests and needs no credentials. A future separately approved live adapter may read `OPENWEATHER_API_KEY` from a private server environment and implement the existing normalized fixture-provider contract. Genuine OpenWeather access, deployment and redistribution remain outside this recovery scope.
+## Optional live mode
+
+Use an active OpenWeather key with access to ZIP Geocoding and Current Weather. In a new checkout, use [.env.example](.env.example) to prepare an ignored `.local/live.env` file and enter the value for `OPENWEATHER_API_KEY` locally. Keep the file private. The server reads that value from the file when explicitly started in live mode. `PORT` is set in the shell as in the fixture instructions.
+
+```powershell
+npm.cmd run start:live
+```
+
+Open the loopback address printed by the server. Look for **Live US weather** and the OpenWeather attribution. Enter a five-digit US ZIP and a sample note, then choose **Generate**. The server sends the ZIP first and then sends the provider's coordinates for current weather in Fahrenheit. The displayed UTC date comes from the provider timestamp. A failed lookup keeps the previous entry. Use Ctrl+C to stop. [ZIP Geocoding](https://openweathermap.org/api/geocoding-api) · [Current Weather](https://openweathermap.org/api/current)
+
+Live requests are capped at two in-flight lookups and 20 upstream calls per rolling minute per process. Each request has a three-second deadline, with six seconds for the full lookup. Failed live lookups stay in live mode. The app keeps only the latest normalized entry for each session in memory. Weather data is provided by OpenWeather. The live page carries the official logo and link, and its only external navigation is a user-selected link. [Free-plan limits](https://openweathermap.org/price) · [Data licensing](https://openweathermap.org/guide#licensing) · [Attribution guidance](https://openweathermap.org/faq#license)
+
+The app is prepared for local review. Publication, deployment and provider data redistribution require separate review.

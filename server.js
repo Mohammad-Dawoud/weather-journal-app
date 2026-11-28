@@ -1,17 +1,27 @@
 const path = require("node:path");
+const { readFileSync } = require("node:fs");
 const express = require("express");
 const { mountJournalRoutes } = require("./server-routes");
 const { lookupFixture } = require("./weather-fixture");
+const {
+  createOpenWeatherLookup,
+  readLiveKey,
+  LOOKUP_MS,
+} = require("./weather-openweather");
 
 const HOST = "127.0.0.1";
 const DEFAULT_PORT = 4189;
 
 function createApp({
   origin,
-  lookupWeather = lookupFixture,
+  lookupWeather,
   now = Date.now,
-  weatherTimeoutMs = 3000,
+  live = false,
+  weatherTimeoutMs = live ? LOOKUP_MS : 3000,
 }) {
+  if (live && !lookupWeather) {
+    throw new Error("Live mode requires an OpenWeather lookup.");
+  }
   const localHost = new URL(origin).host;
   const app = express();
   app.disable("x-powered-by");
@@ -36,7 +46,30 @@ function createApp({
     next();
   });
 
-  mountJournalRoutes(app, { origin, lookupWeather, now, weatherTimeoutMs });
+  mountJournalRoutes(app, {
+    origin,
+    lookupWeather: lookupWeather ?? lookupFixture,
+    now,
+    weatherTimeoutMs,
+  });
+  if (live) {
+    const page = readFileSync(
+      path.join(__dirname, "website", "index.html"),
+      "utf8",
+    )
+      .replace('data-weather-mode="fixture"', 'data-weather-mode="live"')
+      .replace(
+        "Local demo using fixture weather. Use a short sample note.",
+        'Live US weather. Use a short sample note. <a href="https://openweathermap.org/">Weather data provided by OpenWeather <img class="provider-logo" src="/openweather-logo.png" alt="" width="106" height="60" /></a>',
+      )
+      .replace(
+        "Fixture ZIPs include 02139, 10001 and 90210.",
+        "Enter a five-digit US ZIP code.",
+      );
+    app.get(["/", "/index.html"], (_req, res) => {
+      res.set("Cache-Control", "no-store").type("html").send(page);
+    });
+  }
   app.use(express.static(path.join(__dirname, "website")));
   app.use((_req, res) => res.status(404).json({ error: "not_found" }));
   app.use((error, _req, res, _next) => {
@@ -60,6 +93,15 @@ function createApp({
 }
 
 function start() {
+  const args = process.argv.slice(2);
+  const live = args.length === 1 && args[0] === "--live";
+  if (args.length && !live) {
+    console.error(
+      "Use npm run start for fixtures or npm run start:live for live weather.",
+    );
+    process.exitCode = 1;
+    return;
+  }
   const input = process.env.PORT ?? String(DEFAULT_PORT);
   const port = Number(input);
   if (!/^\d{1,5}$/.test(input) || port < 1 || port > 65535) {
@@ -69,9 +111,34 @@ function start() {
   }
 
   const origin = `http://${HOST}:${port}`;
-  const server = createApp({ origin }).listen(port, HOST, () => {
-    console.log(`Weather Journal App (fixtures) listening at ${origin}`);
-  });
+  let lookupWeather;
+  if (live) {
+    if (process.env.NODE_DEBUG || process.env.NODE_DEBUG_NATIVE) {
+      console.error(
+        "Turn off Node network debugging before starting live mode.",
+      );
+      process.exitCode = 1;
+      return;
+    }
+    const key = readLiveKey();
+    if (!key) {
+      console.error(
+        "Live mode requires a valid OPENWEATHER_API_KEY in .local/live.env.",
+      );
+      process.exitCode = 1;
+      return;
+    }
+    lookupWeather = createOpenWeatherLookup({ key });
+  }
+  const server = createApp({ origin, live, lookupWeather }).listen(
+    port,
+    HOST,
+    () => {
+      console.log(
+        `Weather Journal App (${live ? "live" : "fixtures"}) listening at ${origin}`,
+      );
+    },
+  );
   server.requestTimeout = 10000;
   server.headersTimeout = 5000;
 

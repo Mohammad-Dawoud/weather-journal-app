@@ -6,9 +6,12 @@ const statusLine = document.getElementById("status");
 const emptyEntry = document.getElementById("emptyEntry");
 const entryHolder = document.getElementById("entryHolder");
 let saving = false;
+const live = document.documentElement.dataset.weatherMode === "live";
 
 const messages = {
-  unknown_zip: "No fixture weather is available for this ZIP.",
+  unknown_zip: live
+    ? "OpenWeather could not find this US ZIP code."
+    : "No fixture weather is available for this ZIP.",
   invalid_input:
     "Enter a five-digit US ZIP and a sample note up to 500 characters.",
   session_required: "Your session expired. Submit again to save this entry.",
@@ -16,7 +19,14 @@ const messages = {
     "The journal is at capacity. Try again after a session expires.",
   save_in_progress: "A save is already in progress for this session.",
   weather_timeout: "The weather lookup timed out. Try again.",
-  weather_unavailable: "Fixture weather is temporarily unavailable.",
+  weather_unavailable: live
+    ? "Live weather is temporarily unavailable."
+    : "Fixture weather is temporarily unavailable.",
+  weather_credentials:
+    "OpenWeather denied access. Check the server key and plan before restarting live mode.",
+  weather_rate_limited:
+    "The live weather request limit was reached. Try again later.",
+  weather_busy: "Live weather is busy. Wait for another lookup to finish.",
 };
 
 function showStatus(message, error = false) {

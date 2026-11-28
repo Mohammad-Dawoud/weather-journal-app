@@ -9,8 +9,9 @@
   "packageManager": "npm@11.19.1",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check server-routes.js && node --check weather-fixture.js && node --check website/app.js && node --check test/http.test.js && node --check e2e/journal.spec.js && node --check playwright.config.js && prettier --check .",
-    "test": "node --test test/http.test.js",
+    "start:live": "node server.js --live",
+    "check": "node --check server.js && node --check server-routes.js && node --check weather-fixture.js && node --check weather-openweather.js && node --check website/app.js && node --check test/http.test.js && node --check test/openweather.test.js && node --check e2e/journal.spec.js && node --check playwright.config.js && prettier --check .",
+    "test": "node --test test/http.test.js test/openweather.test.js",
     "test:e2e": "playwright test"
   },
   "dependencies": {
