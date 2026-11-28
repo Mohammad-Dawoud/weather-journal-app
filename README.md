@@ -1,20 +1,26 @@
 # Weather Journal App
 
-A local weather journal recovered from my Udacity Front End Web Developer coursework. This JavaScript and Express demo saves one sample note and its weather per browser session. The published starting commit contains my client and route excerpts. The local recovery restores the submitted interface with responsive and keyboard-focus corrections and supports offline fixtures and optional OpenWeather lookups. [Source and font notices](NOTICE.md)
+A local JavaScript and Express weather journal from Udacity's Front End Web Developer Nanodegree. The recovered app restores the submitted interface, adds responsive and keyboard-focus corrections, and keeps one sample note and its weather per browser session. It uses offline weather fixtures by default and supports opt-in OpenWeather lookups. [Source, font and provider notices](NOTICE.md)
 
 ## Run the local demo
 
-Use Node.js 24.22.3 and npm 11.19.1. For a checkout with the reviewed lock, use the trusted npm registry and isolated, empty npm user/global config files. Install with lifecycle scripts disabled. In the prepared SPPP checkout the dependencies and pinned tools are already available. In PowerShell:
+Use Git, Node.js 24.22.3 and npm 11.19.1. In PowerShell, clone the repository and install from the lockfile with lifecycle scripts disabled. The temporary config files keep the install separate from personal npm configuration. On a shell without the Windows command wrapper, use `npm` in place of `npm.cmd`.
 
 ```powershell
-Set-Location -LiteralPath 'D:/Software-Portfolio/02-Working-Copies/P3-T05-A/ND0011-P03-Weather-Journal-App'
-$journalNode = (Resolve-Path -LiteralPath '../../P3-T01-A/ND0067-P01-Image-Processing-API/.local/node-v24.22.3-win-x64').Path
-$env:Path = "$journalNode;$env:Path"
-$env:PORT = '4189'
-npm run start
+git clone https://github.com/Mohammad-Dawoud/weather-journal-app.git
+Set-Location -LiteralPath 'weather-journal-app'
+$userNpmConfig = New-TemporaryFile
+$globalNpmConfig = New-TemporaryFile
+try {
+    npm.cmd ci --ignore-scripts --registry=https://registry.npmjs.org/ "--userconfig=$($userNpmConfig.FullName)" "--globalconfig=$($globalNpmConfig.FullName)"
+    if ($LASTEXITCODE -ne 0) { throw 'Dependency installation failed.' }
+} finally {
+    Remove-Item -LiteralPath $userNpmConfig.FullName, $globalNpmConfig.FullName
+}
+npm.cmd start
 ```
 
-Open [http://127.0.0.1:4189](http://127.0.0.1:4189). Use the address printed by the app, including the port. If it is busy, choose a different free port. Press Ctrl+C to stop. Use sample notes only.
+Open the loopback address printed by the app, by default [http://127.0.0.1:4189](http://127.0.0.1:4189). If the port is busy, set `$env:PORT` to a free port and start again. Press Ctrl+C to stop. Use sample notes only.
 
 | Fixture ZIP | Example temperature | Display date (UTC) |
 | ----------- | ------------------- | ------------------ |
@@ -31,17 +37,26 @@ Fixture mode is the default and runs without an API key or external weather call
 The page reads `GET /all` to establish its session. It sends a five-digit ZIP string and a nonempty note up to 500 characters to `POST /addWeatherData`, then waits for a successful response before rereading `GET /all`. JSON is limited to 4 KiB. The server binds only to `127.0.0.1`, accepts its exact local Host and write Origin, and supports up to 32 isolated sessions.
 
 ```powershell
-npm run check
-npm test
-$env:PLAYWRIGHT_BROWSERS_PATH = (Resolve-Path -LiteralPath '../../P3-T03-A/ND0067-P03-My-Store/.local/browsers').Path
-npm run test:e2e
+npm.cmd run check
+npm.cmd test
+npm.cmd exec -- playwright install chromium
+npm.cmd run test:e2e
 ```
 
-The browser tests use Playwright 1.65.1 and Chromium headless shell 159.0.8154.6 (revision 1255). The browser is already present in the prepared SPPP workspace. The app serves plain static assets directly through Express.
+Local verification on Windows x64 passed 25 Node tests and 12 Playwright cases using Chromium. Two of three automated live scenarios completed. Owner manual verification confirmed the interrupted scenario and one additional ZIP, bringing the combined evidence to four distinct successful ZIPs. The owner also passed all six final manual checks. Browser installation is needed only for browser tests. Those tests use deterministic fixtures and consume no OpenWeather quota. [Playwright browser setup](https://playwright.dev/docs/browsers)
 
 ## Optional live mode
 
-Use an active OpenWeather key with access to ZIP Geocoding and Current Weather. In a new checkout, use [.env.example](.env.example) to prepare an ignored `.local/live.env` file and enter the value for `OPENWEATHER_API_KEY` locally. Keep the file private. The server reads that value from the file when explicitly started in live mode. `PORT` is set in the shell as in the fixture instructions.
+Stop fixture mode first. Use an active OpenWeather key with access to ZIP Geocoding and Current Weather. Create an ignored `.local/live.env` file from the template if it does not already exist. Edit the file locally to supply `OPENWEATHER_API_KEY`. The server reads it only when started in live mode. `PORT` is set in the shell as in the fixture instructions. [Empty configuration template](.env.example)
+
+```powershell
+New-Item -ItemType Directory -Path '.local' -Force | Out-Null
+if (-not (Test-Path -LiteralPath '.local/live.env')) {
+    Copy-Item -LiteralPath '.env.example' -Destination '.local/live.env'
+}
+```
+
+After saving the private configuration, start live mode.
 
 ```powershell
 npm.cmd run start:live
@@ -51,4 +66,4 @@ Open the loopback address printed by the server. Look for **Live US weather** an
 
 Live requests are capped at two in-flight lookups and 20 upstream calls per rolling minute per process. Each request has a three-second deadline, with six seconds for the full lookup. Failed live lookups stay in live mode. The app keeps only the latest normalized entry for each session in memory. Weather data is provided by OpenWeather. The live page carries the official logo and link, and its only external navigation is a user-selected link. [Free-plan limits](https://openweathermap.org/price) · [Data licensing](https://openweathermap.org/guide#licensing) · [Attribution guidance](https://openweathermap.org/faq#license)
 
-The app is prepared for local review. Publication, deployment and provider data redistribution require separate review.
+This recovery was verified for loopback use with sample notes. It has no persistent journal storage or production hosting configuration. Public live deployment and redistribution of provider data are separate from publication of the source.
