@@ -1,114 +1,128 @@
-// Supply your own OpenWeatherMap key in a private local copy.
-const API_KEY = "YOUR_OPENWEATHERMAP_API_KEY";
-const baseURL = "https://api.openweathermap.org/data/2.5/weather?zip=";
+const form = document.getElementById("journalForm");
+const zipField = document.getElementById("zip");
+const feelingsField = document.getElementById("feelings");
+const generate = document.getElementById("generate");
+const statusLine = document.getElementById("status");
+const emptyEntry = document.getElementById("emptyEntry");
+const entryHolder = document.getElementById("entryHolder");
+let saving = false;
 
-// Convert date
-function convertDate(unixtimestamp) {
-  // Months array
-  var months_array = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
+const messages = {
+  unknown_zip: "No fixture weather is available for this ZIP.",
+  invalid_input:
+    "Enter a five-digit US ZIP and a sample note up to 500 characters.",
+  session_required: "Your session expired. Submit again to save this entry.",
+  session_capacity:
+    "The journal is at capacity. Try again after a session expires.",
+  save_in_progress: "A save is already in progress for this session.",
+  weather_timeout: "The weather lookup timed out. Try again.",
+  weather_unavailable: "Fixture weather is temporarily unavailable.",
+};
 
-  // Convert timestamp to milliseconds
-  var date = new Date(unixtimestamp * 1000);
-  var year = date.getFullYear();
-  var month = months_array[date.getMonth()];
-  var day = date.getDate();
-  // Display date time in MM/dd/yyyy format
-  var convertedTime = month + "/" + day + "/" + year;
-
-  return convertedTime;
+function showStatus(message, error = false) {
+  statusLine.textContent = message;
+  statusLine.toggleAttribute("data-error", error);
 }
 
-// Event listener to add function to existing HTML DOM element
-/* Function called by event listener */
-document.getElementById("generate").addEventListener("click", displayAction);
-
-function displayAction() {
-  const zip = document.getElementById("zip").value;
-  const feelings = document.getElementById("feelings").value;
-
-  getDataApi(baseURL, zip, API_KEY)
-    .then(function (data) {
-      console.log("AllData from api: ", data);
-      postDataApi("/addWeatherData", {
-        temperature: data.main.temp,
-        date: convertDate(data.dt),
-        userResponse: feelings,
-      });
-    })
-    .then(() => updateUI());
+async function readResponse(response) {
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(
+      Object.hasOwn(messages, result.error) ? result.error : "request_failed",
+    );
+  }
+  return result;
 }
 
-// Async GET
-/* GET Web API Data Function*/
-const getDataApi = async (baseURL, zip, API_KEY) => {
-  if (zip.toString().length !== 5) {
-    alert("zip should be of length 5!");
+async function postDataApi(url, data) {
+  return readResponse(
+    await fetch(url, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }),
+  );
+}
+
+async function updateUI() {
+  const { entry } = await readResponse(
+    await fetch("/all", { credentials: "same-origin", cache: "no-store" }),
+  );
+  emptyEntry.hidden = entry !== null;
+  entryHolder.hidden = entry === null;
+  if (entry !== null) {
+    document.getElementById("date").textContent = `Date (UTC): ${entry.date}`;
+    document.getElementById("temp").textContent =
+      `Temperature: ${entry.temperatureF} °F`;
+    document.getElementById("content").textContent =
+      `Feelings: ${entry.feelings}`;
   } else {
-    const url = `${baseURL}${zip}${API_KEY}`;
-
-    const request = await fetch(url);
-    try {
-      const allData = await request.json();
-      if (allData.message) {
-        alert(allData.message);
-      } else {
-        return allData;
-      }
-    } catch (error) {
-      console.log("error", error);
-      // Error handle
+    for (const field of entryHolder.children) {
+      field.textContent = "";
     }
   }
-};
+}
 
-/* POST data Function*/
-// Async POST
-const postDataApi = async (url = "", data = {}) => {
-  console.log("post weather data: ", data);
-  const response = await fetch(url, {
-    method: "POST",
-    credentials: "same-origin",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
+async function displayAction(event) {
+  event.preventDefault();
+  if (saving || !form.reportValidity()) {
+    return;
+  }
+
+  const zip = zipField.value;
+  const feelings = feelingsField.value.trim();
+  if (!feelings) {
+    showStatus(messages.invalid_input, true);
+    feelingsField.focus();
+    return;
+  }
+
+  saving = true;
+  generate.disabled = true;
+  showStatus("Saving entry…");
+  let saved = false;
+  try {
+    await postDataApi("/addWeatherData", { zip, feelings });
+    saved = true;
+    await updateUI();
+    showStatus("Entry saved.");
+  } catch (error) {
+    if (saved) {
+      showStatus(
+        "Entry saved, but the latest entry could not load. Refresh to view it.",
+        true,
+      );
+    } else if (error.message === "session_required") {
+      try {
+        await updateUI();
+        showStatus(messages.session_required, true);
+      } catch {
+        showStatus(
+          "Could not renew the journal session. Refresh and try again.",
+          true,
+        );
+      }
+    } else {
+      showStatus(
+        Object.hasOwn(messages, error.message)
+          ? messages[error.message]
+          : "Could not save the entry. Please try again.",
+        true,
+      );
+    }
+  } finally {
+    saving = false;
+    generate.disabled = false;
+  }
+}
+
+generate.addEventListener("click", displayAction);
+form.addEventListener("submit", displayAction);
+updateUI()
+  .catch(() =>
+    showStatus("Could not load the journal. Refresh to try again.", true),
+  )
+  .finally(() => {
+    generate.disabled = false;
   });
-
-  try {
-    const newData = await response.json();
-    console.log("post res: ", newData);
-  } catch (error) {
-    console.log("error", error);
-  }
-};
-
-/* Update UI Function */
-const updateUI = async () => {
-  const request = await fetch("/all");
-  try {
-    const data = await request.json();
-    console.log("updateUI: ", data);
-    document.getElementById("date").innerHTML = `Date: ${data.date}`;
-    document.getElementById(
-      "temp"
-    ).innerHTML = `Temperature(°C): ${data.temperature}`;
-    document.getElementById(
-      "content"
-    ).innerHTML = `Feelings: ${data.userResponse}`;
-  } catch (error) {
-    console.log("error", error);
-  }
-};

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Weather Journal App</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" href="data:," />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Weather Journal</h1>
+        <p>Local demo using fixture weather. Use a short sample note.</p>
+      </header>
+
+      <form id="journalForm">
+        <div class="field">
+          <label for="zip">US ZIP code</label>
+          <input
+            id="zip"
+            name="zip"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="enter zip code here"
+            maxlength="5"
+            pattern="[0-9]{5}"
+            aria-describedby="zipHint"
+            required
+          />
+          <small id="zipHint"
+            >Fixture ZIPs include 02139, 10001 and 90210.</small
+          >
+        </div>
+        <div class="field">
+          <label for="feelings">How are you feeling?</label>
+          <textarea
+            id="feelings"
+            name="feelings"
+            rows="4"
+            maxlength="500"
+            required
+          ></textarea>
+        </div>
+        <button id="generate" type="submit" disabled>Save entry</button>
+        <p id="status" role="status"></p>
+      </form>
+
+      <section aria-labelledby="entryTitle">
+        <h2 id="entryTitle">Latest entry</h2>
+        <p id="emptyEntry">No entry yet.</p>
+        <div id="entryHolder" hidden>
+          <div id="date"></div>
+          <div id="temp"></div>
+          <div id="content"></div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

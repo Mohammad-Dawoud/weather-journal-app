@@ -25,3 +25,8 @@ Thumbs.db
 .idea/
 .vscode/
 .workspace-submit.json
+
+# Private local recovery files
+.local/
+playwright-report/
+test-results/
