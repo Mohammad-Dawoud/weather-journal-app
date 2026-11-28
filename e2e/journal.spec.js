@@ -58,9 +58,9 @@ test.afterEach(async () => {
 });
 
 async function enter(page, zip, feelings) {
-  await page.getByLabel("US ZIP code").fill(zip);
-  await page.getByLabel("How are you feeling?").fill(feelings);
-  await page.getByRole("button", { name: "Save entry" }).click();
+  await page.getByLabel("Enter Zipcode here").fill(zip);
+  await page.getByLabel("How are you feeling today?").fill(feelings);
+  await page.getByRole("button", { name: "Generate" }).click();
 }
 
 async function evidence(page, name) {
@@ -85,6 +85,56 @@ test("empty, saved, and error views match the rubric and fit the viewport", asyn
   await expect(
     page.getByText(/Local demo using fixture weather/),
   ).toBeVisible();
+  await expect(
+    page
+      .locator("main#app")
+      .getByRole("heading", { name: "Weather Journal App" }),
+  ).toHaveCSS("color", "rgb(59, 72, 115)");
+  await expect(
+    page
+      .locator("#app > .entry")
+      .getByRole("heading", { name: "Most Recent Entry" }),
+  ).toBeVisible();
+  await expect(page.locator("body")).toHaveCSS(
+    "background-color",
+    "rgb(244, 244, 249)",
+  );
+  await expect(page.locator("main#app")).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+  await expect(page.locator(".zip label")).toHaveCSS("text-align", "center");
+  await expect(zip).toHaveCSS("width", "250px");
+  const appearance = await page.evaluate(async () => {
+    await document.fonts.ready;
+    const panel = document.querySelector("#app");
+    const textarea = document.querySelector("#feelings");
+    const button = document.querySelector("#generate").getBoundingClientRect();
+    return {
+      width: window.innerWidth,
+      zoom: window.visualViewport.scale,
+      centeredButton:
+        Math.abs(button.left + button.width / 2 - window.innerWidth / 2) < 1,
+      wideTextarea: textarea.clientWidth > panel.clientWidth * 0.8,
+      fonts: Array.from(document.fonts, ({ family, status }) => ({
+        family: family.replaceAll('"', ""),
+        status,
+      })),
+    };
+  });
+  expect(appearance.width).toBe(page.viewportSize().width);
+  expect(appearance.zoom).toBe(1);
+  expect(appearance.centeredButton).toBe(true);
+  expect(appearance.wideTextarea).toBe(true);
+  expect(appearance.fonts).toHaveLength(3);
+  expect(appearance.fonts).toEqual(
+    expect.arrayContaining(
+      ["Overpass", "Hind Siliguri", "Josefin Sans"].map((family) => ({
+        family,
+        status: "loaded",
+      })),
+    ),
+  );
   for (const id of ["date", "temp", "content"]) {
     await expect(page.locator(`#entryHolder > div#${id}`)).toHaveCount(1);
   }
@@ -99,7 +149,19 @@ test("empty, saved, and error views match the rubric and fit the viewport", asyn
     "Synthetic note for the Weather Journal demo.",
   );
   await expect(page.locator("#entryHolder")).toBeVisible();
+  for (const id of ["date", "temp"]) {
+    await expect(page.locator(`#${id}`)).toHaveCSS("color", "rgb(222, 117, 4)");
+  }
   await evidence(page, "success");
+
+  await zip.focus();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  const generate = page.getByRole("button", { name: "Generate" });
+  await expect(generate).toBeFocused();
+  await expect(generate).toHaveCSS("outline-style", "solid");
+  await expect(generate).toHaveCSS("outline-width", "3px");
+  await evidence(page, "keyboard-focus");
 
   await enter(
     page,
@@ -122,9 +184,9 @@ test("empty, saved, and error views match the rubric and fit the viewport", asyn
 test("uses keyboard focus, rejects invalid input and saves once by keyboard", async ({
   page,
 }) => {
-  const zip = page.getByLabel("US ZIP code");
-  const note = page.getByLabel("How are you feeling?");
-  const button = page.getByRole("button", { name: "Save entry" });
+  const zip = page.getByLabel("Enter Zipcode here");
+  const note = page.getByLabel("How are you feeling today?");
+  const button = page.getByRole("button", { name: "Generate" });
   const writes = [];
   page.on("request", (request) => {
     if (request.method() === "POST") writes.push(request.url());
@@ -140,6 +202,7 @@ test("uses keyboard focus, rejects invalid input and saves once by keyboard", as
   await zip.focus();
   await page.keyboard.press("Tab");
   await expect(note).toBeFocused();
+  await expect(note).toHaveCSS("outline-width", "3px");
   await page.keyboard.press("Tab");
   await expect(button).toBeFocused();
   await page.keyboard.press("Space");

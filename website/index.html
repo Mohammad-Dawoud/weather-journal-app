@@ -9,16 +9,19 @@
     <script src="/app.js" defer></script>
   </head>
   <body>
-    <main>
+    <main id="app">
       <header>
-        <h1>Weather Journal</h1>
-        <p>Local demo using fixture weather. Use a short sample note.</p>
+        <h1 class="holder headline">Weather Journal App</h1>
+        <p class="fixture-note">
+          Local demo using fixture weather. Use a short sample note.
+        </p>
       </header>
 
       <form id="journalForm">
-        <div class="field">
-          <label for="zip">US ZIP code</label>
+        <div class="holder zip">
+          <label for="zip">Enter Zipcode here</label>
           <input
+            type="text"
             id="zip"
             name="zip"
             inputmode="numeric"
@@ -33,22 +36,25 @@
             >Fixture ZIPs include 02139, 10001 and 90210.</small
           >
         </div>
-        <div class="field">
-          <label for="feelings">How are you feeling?</label>
+        <div class="holder feel">
+          <label for="feelings">How are you feeling today?</label>
           <textarea
+            class="myInput"
             id="feelings"
             name="feelings"
-            rows="4"
+            placeholder="Enter your feelings here"
+            rows="9"
+            cols="50"
             maxlength="500"
             required
           ></textarea>
+          <button id="generate" type="submit" disabled>Generate</button>
         </div>
-        <button id="generate" type="submit" disabled>Save entry</button>
         <p id="status" role="status"></p>
       </form>
 
-      <section aria-labelledby="entryTitle">
-        <h2 id="entryTitle">Latest entry</h2>
+      <section class="holder entry" aria-labelledby="entryTitle">
+        <h2 class="title" id="entryTitle">Most Recent Entry</h2>
         <p id="emptyEntry">No entry yet.</p>
         <div id="entryHolder" hidden>
           <div id="date"></div>

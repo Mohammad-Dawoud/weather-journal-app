@@ -1,6 +1,6 @@
 # Weather Journal App
 
-A local weather journal recovered from my Udacity Front End Web Developer coursework. This JavaScript and Express demo saves one sample note and fixture weather per browser session. The published starting commit contains my client and route excerpts. This recovery adds independently written HTML, CSS, server setup, fixtures and tests. Coursework attribution remains with the original project.
+A local weather journal recovered from my Udacity Front End Web Developer coursework. This JavaScript and Express demo saves one sample note and fixture weather per browser session. The published starting commit contains my client and route excerpts. The local recovery restores the submitted interface with responsive and keyboard-focus corrections, while retaining the recovered server, session controls and fixture tests. See the [source and font notices](NOTICE.md) for the HTML, CSS and locally served fonts.
 
 ## Run the local demo
 
@@ -22,7 +22,7 @@ Open [http://127.0.0.1:4189](http://127.0.0.1:4189). Use the address printed by 
 | `10001`     | 43.7 °F             | 2025-01-15         |
 | `90210`     | 68 °F               | 2025-01-15         |
 
-Enter `02139` and a sample note, then choose **Save entry** or use the keyboard. The page displays the fixture's fixed UTC observation date, Fahrenheit temperature and trimmed note. Try an invalid ZIP such as `1234`, then an unknown fixture ZIP such as `99999`. A failed save leaves the last valid entry visible. Refresh to see the same session entry. A private window starts empty. Entries live only in server memory, expire after 30 minutes idle and disappear on restart.
+Enter `02139` and a sample note, then choose **Generate** or use the keyboard. The page displays the fixture's fixed UTC observation date, Fahrenheit temperature and trimmed note. Try an invalid ZIP such as `1234`, then an unknown fixture ZIP such as `99999`. A failed save leaves the last valid entry visible. Refresh to see the same session entry. A private window starts empty. Entries live only in server memory, expire after 30 minutes idle and disappear on restart.
 
 ## Routes and verification
 

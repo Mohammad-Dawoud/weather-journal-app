@@ -69,7 +69,7 @@ const stored = {
   feelings: sample.feelings,
 };
 
-test("serves the independent UI and only the static asset directory", async (t) => {
+test("serves the restored UI and only the static asset directory", async (t) => {
   const { app, request } = await openApp(t);
   assert.equal(app.get("trust proxy"), false);
   const page = await request("/");
@@ -79,7 +79,22 @@ test("serves the independent UI and only the static asset directory", async (t) 
   for (const asset of ["/app.js", "/styles.css"]) {
     assert.equal((await request(asset)).status, 200);
   }
-  for (const path of ["/server.js", "/package.json", "/ALL", "/all/"]) {
+  for (const name of ["overpass", "hindsiliguri", "josefinsans"]) {
+    const font = await request(`/fonts/${name}.ttf`);
+    assert.equal(font.status, 200);
+    assert.match(font.headers["content-type"], /^font\/ttf\b/);
+    const notice = await request(`/fonts/${name}-OFL.txt`);
+    assert.equal(notice.status, 200);
+    assert.match(notice.content, /SIL OPEN FONT LICENSE Version 1.1/i);
+  }
+  for (const path of [
+    "/server.js",
+    "/package.json",
+    "/licenses/udacity-fend-MIT.txt",
+    "/.local/original-ui-b1/capture-verification.json",
+    "/ALL",
+    "/all/",
+  ]) {
     assert.equal((await request(path)).status, 404);
   }
 });

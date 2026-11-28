@@ -1,0 +1,4 @@
+# Preserve the exact upstream bytes of the bundled fonts and notices.
+/website/fonts/* -text
+/website/fonts/*-OFL.txt -whitespace
+/licenses/udacity-fend-MIT.txt -text

@@ -1,111 +1,229 @@
-:root {
-  color-scheme: light;
-  font-family: system-ui, sans-serif;
-  color: #142537;
-  background: #edf3f7;
+/* The academic layout includes Udacity starter material. See NOTICE.md. */
+
+@font-face {
+  font-family: "Overpass";
+  src: url("/fonts/overpass.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
 }
 
-* {
-  box-sizing: border-box;
+@font-face {
+  font-family: "Hind Siliguri";
+  src: url("/fonts/hindsiliguri.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Josefin Sans";
+  src: url("/fonts/josefinsans.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
 }
 
 body {
-  margin: 0;
+  font-family:
+    "Overpass",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  margin: 0 auto;
+  max-width: 1200px;
+  background-color: #f4f4f9;
+  color: #333;
+  line-height: 1.6;
+  padding: 0 10px;
 }
 
-main {
-  width: min(100% - 2rem, 38rem);
-  margin: 3rem auto;
+#app {
+  margin: 30px auto;
+  padding: 2rem;
+  position: relative;
+  background-color: #fff;
+  margin-bottom: 3rem;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  color: #333;
+  font-size: 1.2rem;
+  font-family: "Hind Siliguri", sans-serif;
 }
 
-h1,
-h2 {
-  margin: 0 0 0.6rem;
+.holder {
+  margin: 10px auto;
 }
 
-header p {
-  color: #385166;
-}
-
-form,
-section {
-  margin-block: 1.3rem;
-  padding: 1.15rem;
-  border: 1px solid #aebfcd;
-  border-radius: 0.65rem;
-  background: #fff;
-}
-
-.field {
-  display: grid;
-  gap: 0.4rem;
-  margin-bottom: 1rem;
-}
-
-label {
-  font-weight: 650;
-}
-
-input,
-textarea,
-button {
-  font: inherit;
-}
-
-input,
-textarea {
-  width: 100%;
-  padding: 0.6rem;
-  border: 1px solid #657c8f;
-  border-radius: 0.3rem;
-  color: inherit;
-}
-
-textarea {
-  resize: vertical;
-}
-
-button {
-  min-height: 2.65rem;
-  padding-inline: 1rem;
-  border: 0;
-  border-radius: 0.3rem;
-  color: #fff;
-  background: #214e70;
-  font-weight: 650;
-  cursor: pointer;
-}
-
-button:disabled {
-  background: #516576;
-  cursor: wait;
-}
-
-:focus-visible {
-  outline: 3px solid #7b370c;
-  outline-offset: 3px;
-}
-
-#status {
-  min-height: 1.5em;
-  margin: 0.6rem 0 0;
-  overflow-wrap: anywhere;
-}
-
-#status[data-error] {
-  color: #922027;
+.entry {
+  width: 80%;
+  margin: 0 auto;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 #entryHolder {
-  overflow-wrap: anywhere;
+  color: #333;
+}
+
+#date,
+#temp {
+  color: #de7504;
+  font-weight: bold;
+}
+
+.headline {
+  font-weight: 400;
+  text-align: center;
+  font-size: 2rem;
+  color: #3b4873;
+}
+
+.zip,
+.feel {
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  font-weight: 700;
+  font-family: "Josefin Sans", sans-serif;
+  font-size: 1.5rem;
+  color: #2f3e63;
+  text-align: center;
+}
+
+label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 8px;
+}
+
+input {
+  display: block;
+  height: 40px;
+  width: 100%;
+  max-width: 250px;
+  border-radius: 5px;
+  background: #f9f9f9;
+  color: #333;
+  font-size: 1rem;
+  font-family: "Overpass", sans-serif;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  margin: 10px auto;
+  box-sizing: border-box;
+}
+
+input:focus {
+  border-color: #de7504;
+  box-shadow: 0 0 8px rgba(222, 117, 4, 0.3);
+}
+
+button {
+  width: 250px;
+  max-width: 100%;
+  cursor: pointer;
+  height: 50px;
+  border-radius: 8px;
+  background: #3b4873;
+  color: #fff;
+  font-size: 1.2rem;
+  font-family: "Overpass", sans-serif;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
+}
+
+button:enabled:hover {
+  background-color: #2f3e63;
+  transform: translateY(-2px);
+}
+
+textarea {
+  background: #f9f9f9;
+  color: #333;
+  padding: 10px;
+  font-size: 1rem;
+  font-family: "Overpass", sans-serif;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 10px auto;
+}
+
+textarea:focus {
+  border-color: #de7504;
+  box-shadow: 0 0 8px rgba(222, 117, 4, 0.3);
+}
+
+input:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: 3px solid #3b4873;
+  outline-offset: 3px;
+}
+
+.fixture-note,
+#zipHint,
+#status,
+#emptyEntry {
+  font-size: 1rem;
+  color: #444;
+}
+
+.fixture-note,
+#status {
+  text-align: center;
+  margin: 0;
+}
+
+#zipHint {
+  display: block;
+}
+
+#status:not(:empty) {
+  margin: 0 0 10px;
+}
+
+#status[data-error] {
+  color: #9b2c2c;
+}
+
+#emptyEntry {
+  margin: 0;
 }
 
 #content {
-  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
-@media (max-width: 32rem) {
-  main {
-    margin-block: 1.6rem;
+button:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  #app {
+    padding: 1.5rem;
+  }
+
+  button {
+    width: 100%;
+    max-width: 250px;
+  }
+
+  .entry {
+    box-sizing: border-box;
+    width: 100%;
   }
 }
